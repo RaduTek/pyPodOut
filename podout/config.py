@@ -20,6 +20,8 @@ TEXT_GAP = 12          # space between icon and text / text and chevron
 # 480 - 40 = 440 = lcm(55, 88): exactly 8 rows of 55px or 5 rows of 88px below the bar.
 STATUS_BAR_HEIGHT = 40
 STATUS_BAR_FONT_SIZE = 26
+STATUS_BAR_MARGIN_X = 16
+STATUS_BAR_ICON_GAP = 8
 TOP_OFFSET = STATUS_BAR_HEIGHT
 MENU_FONT_SIZE = 30
 

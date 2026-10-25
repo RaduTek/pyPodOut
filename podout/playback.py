@@ -11,6 +11,7 @@ class Track:
     album: str = ""
     duration: float = 180.0
     artwork: str = "AlbumPlaceholder"
+    rating: int = 0   # 0 = unrated; 1..5 shows that many stars
 
 
 class Playback:
@@ -22,6 +23,8 @@ class Playback:
         self.position = 0.0
         self.playing = False
         self.volume = 0.5   # 0.0 .. 1.0
+        self.shuffle = False
+        self.repeat = "off"   # "off" | "all" | "one"
 
     @property
     def track(self) -> "Track | None":
@@ -50,6 +53,10 @@ class Playback:
     @property
     def duration(self) -> float:
         return self.track.duration if self.track else 0.0
+
+    @property
+    def rating(self) -> int:
+        return self.track.rating if self.track else 0
 
     def set_queue(self, tracks: Iterable[Track], index: int = 0, play: bool = True) -> None:
         self.queue = list(tracks)

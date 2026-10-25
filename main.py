@@ -13,10 +13,10 @@ from podout.ui import (ScreenManager, UIMenu, UIMenuItem, UILazyMenu, UIListMenu
 SONGS_TOTAL = 500
 
 DEMO_QUEUE = [
-    Track("Come Together", "The Beatles", "Abbey Road", 259),
-    Track("Something", "The Beatles", "Abbey Road", 182),
-    Track("Here Comes the Sun (Original Version)", "The Beatles", "Abbey Road", 185),
-    Track("Because", "The Beatles", "Abbey Road", 165),
+    Track("Come Together", "The Beatles", "Abbey Road", 259, rating=5),
+    Track("Something", "The Beatles", "Abbey Road", 182, rating=4),
+    Track("Here Comes the Sun (Original Version)", "The Beatles", "Abbey Road", 185, rating=3),
+    Track("Because", "The Beatles", "Abbey Road", 165, rating=0),
 ]
 
 
@@ -52,6 +52,8 @@ def build_root_menu(playback):
     def open_now_playing(item):
         if not playback.has_track:
             playback.set_queue(DEMO_QUEUE)
+            playback.shuffle = True
+            playback.repeat = "off"
         push_screen(UINowPlaying(playback))
 
     def toggle_item(item: UIMenuItem):
