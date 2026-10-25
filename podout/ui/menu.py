@@ -1,3 +1,5 @@
+from typing import Any, Callable, Iterable
+
 import pygame
 
 from podout import events, keys
@@ -12,8 +14,11 @@ SECONDARY_GAP = 8   # vertical gap between the primary and secondary line on lar
 
 
 class UIMenuItem:
-    def __init__(self, id, text, icon=None, highlight_icon=None, large=False,
-                 chevron=False, on_select=None, data=None, secondary_text=""):
+    def __init__(self, id: str, text: str, icon: str | None = None,
+                 highlight_icon: str | None = None, large: bool = False,
+                 chevron: bool = False,
+                 on_select: Callable[["UIMenuItem"], Any] | None = None,
+                 data: Any = None, secondary_text: str = ""):
         self.id = id
         self.icon = icon                  # e.g. "Albums55"
         self.large = large                # tall (88px) row vs. standard (55px)
@@ -21,42 +26,42 @@ class UIMenuItem:
         self.chevron = chevron
         self.on_select = on_select
         self.data = data
-        self.menu = None                  # set by the owning UIMenu
+        self.menu: "UIMenu | None" = None   # set by the owning UIMenu
         self._text = text
         # Shown right-aligned before the chevron, or below the text on large items.
         self._secondary_text = secondary_text
-        self._cache = {}                  # (text, color, bold) -> rendered surface
+        self._cache: dict[tuple, pygame.Surface] = {}   # (text, color, bold) -> rendered surface
         # Default the highlight artwork to "Highlight" + icon when that file exists.
         if highlight_icon is None and icon and image_exists("Highlight" + icon):
             highlight_icon = "Highlight" + icon
         self.highlight_icon = highlight_icon
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self._text
 
     @text.setter
-    def text(self, value):
+    def text(self, value: str) -> None:
         if value != self._text:
             self._text = value
             self._invalidate()
 
     @property
-    def secondary_text(self):
+    def secondary_text(self) -> str:
         return self._secondary_text
 
     @secondary_text.setter
-    def secondary_text(self, value):
+    def secondary_text(self, value: str) -> None:
         if value != self._secondary_text:
             self._secondary_text = value
             self._invalidate()
 
-    def _invalidate(self):
+    def _invalidate(self) -> None:
         self._cache.clear()
         if self.menu is not None:
             self.menu.mark_dirty()
 
-    def render(self, text, color, bold=True):
+    def render(self, text: str, color: tuple[int, int, int], bold: bool = True) -> pygame.Surface:
         """Return the cached render of text in color, rendering it on first use."""
         key = (text, color, bold)
         surf = self._cache.get(key)
@@ -67,7 +72,7 @@ class UIMenuItem:
 
 
 class UIMenu(UIScreen):
-    def __init__(self, title, items):
+    def __init__(self, title: str, items: Iterable[UIMenuItem]) -> None:
         super().__init__(title)
         self.items = list(items)
         for item in self.items:
@@ -78,26 +83,26 @@ class UIMenu(UIScreen):
         self._chevron_hl = None
 
     @property
-    def selected_item(self):
+    def selected_item(self) -> "UIMenuItem | None":
         return self.items[self.selected_index] if self.items else None
 
-    def _item_top(self, index):
+    def _item_top(self, index: int) -> int:
         return sum(item.height for item in self.items[:index])
 
-    def _content_height(self):
+    def _content_height(self) -> int:
         return sum(item.height for item in self.items)
 
     @property
-    def overflowing(self):
+    def overflowing(self) -> bool:
         return self._content_height() > self.viewport.height
 
-    def select(self, index):
+    def select(self, index: int) -> None:
         if not self.items:
             return
         self.selected_index = max(0, min(index, len(self.items) - 1))
         self._scroll_to_selected()
 
-    def _scroll_to_selected(self):
+    def _scroll_to_selected(self) -> None:
         top = self._item_top(self.selected_index)
         bottom = top + self.items[self.selected_index].height
         if top < self.scroll_y:
@@ -107,7 +112,7 @@ class UIMenu(UIScreen):
         max_scroll = max(0, self._content_height() - self.viewport.height)
         self.scroll_y = max(0, min(self.scroll_y, max_scroll))
 
-    def activate(self):
+    def activate(self) -> None:
         item = self.selected_item
         if item is None:
             return
@@ -115,7 +120,7 @@ class UIMenu(UIScreen):
             item.on_select(item)
         pygame.event.post(pygame.event.Event(events.MENU_ITEM_SELECTED, menu=self, item=item))
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type != pygame.KEYDOWN:
             return False
         if event.key in keys.UP:
@@ -132,7 +137,7 @@ class UIMenu(UIScreen):
             return False
         return True
 
-    def _highlight_chevron(self):
+    def _highlight_chevron(self) -> pygame.Surface:
         if self._chevron_hl is None:
             chevron = load_image("Chevron").copy()
             # Keep alpha, push RGB to white.
@@ -140,7 +145,7 @@ class UIMenu(UIScreen):
             self._chevron_hl = chevron
         return self._chevron_hl
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
         surface.set_clip(self.viewport)
         y = self.viewport.top - self.scroll_y
         for index, item in enumerate(self.items):
@@ -151,7 +156,7 @@ class UIMenu(UIScreen):
             self._draw_scroll_hint(surface)
         surface.set_clip(None)
 
-    def _draw_scroll_hint(self, surface):
+    def _draw_scroll_hint(self, surface: pygame.Surface) -> None:
         vp = self.viewport
         content_h = self._content_height()
         track = pygame.Rect(vp.right - SCROLL_HINT_INSET - SCROLL_HINT_WIDTH, vp.top + SCROLL_HINT_INSET,
@@ -164,7 +169,7 @@ class UIMenu(UIScreen):
         pygame.draw.rect(surface, SCROLL_HINT_THUMB_COLOR,
                          (track.left, thumb_y, track.width, thumb_h), border_radius=radius)
 
-    def _draw_item(self, surface, item, y, selected):
+    def _draw_item(self, surface: pygame.Surface, item: UIMenuItem, y: int, selected: bool) -> None:
         center_y = y + item.height // 2
 
         if selected:

@@ -2,6 +2,7 @@ import pygame
 
 from podout import events, keys
 from podout.config import SCREEN_W, TEXT_COLOR, TEXT_SECONDARY_COLOR
+from podout.playback import Playback
 from podout.resources import get_font, load_image
 from podout.ui.screen import UIScreen
 
@@ -10,24 +11,24 @@ INFO_X = 300
 BAR_RECT = pygame.Rect(INFO_X, 350, SCREEN_W - INFO_X - 30, 19)
 
 
-def _fmt_time(seconds):
+def _fmt_time(seconds: float) -> str:
     seconds = int(seconds)
     return f"{seconds // 60}:{seconds % 60:02d}"
 
 
 class UINowPlaying(UIScreen):
-    def __init__(self, playback):
+    def __init__(self, playback: Playback) -> None:
         super().__init__("Now Playing")
         self.playback = playback
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> bool:
         # Play/pause, next/previous and volume are handled globally in main.py.
         if event.type == pygame.KEYDOWN and event.key in keys.BACK:
             events.pop_screen()
             return True
         return False
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
         pb = self.playback
         surface.blit(load_image(pb.artwork), ART_POS)
 

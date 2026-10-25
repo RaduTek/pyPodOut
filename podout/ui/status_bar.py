@@ -2,17 +2,18 @@ import pygame
 
 from podout.config import (MARGIN_X, SCREEN_W, STATUS_BAR_FONT_SIZE, STATUS_BAR_HEIGHT,
                            TEXT_HIGHLIGHT_COLOR)
+from podout.playback import Playback
 from podout.resources import get_font, load_image
 
 
 class UIStatusBar:
     """Top bar showing the current screen title and the playback state."""
 
-    def __init__(self, playback):
+    def __init__(self, playback: Playback) -> None:
         self.playback = playback
         self.rect = pygame.Rect(0, 0, SCREEN_W, STATUS_BAR_HEIGHT)
 
-    def draw(self, surface, title):
+    def draw(self, surface: pygame.Surface, title: str) -> None:
         surface.blit(load_image("StatusBarBackground"), self.rect)
         center_y = self.rect.centery
 

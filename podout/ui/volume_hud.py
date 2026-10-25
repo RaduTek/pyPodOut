@@ -1,25 +1,26 @@
 import pygame
 
 from podout.config import SCREEN_H, SCREEN_W, TOP_OFFSET, VOLUME_HUD_DURATION
+from podout.playback import Playback
 from podout.resources import load_image
 
 
 class UIVolumeHUD:
     """Overlay that briefly shows the volume level whenever it changes."""
 
-    def __init__(self, playback):
+    def __init__(self, playback: Playback) -> None:
         self.playback = playback
         self._last_volume = playback.volume
         self.time_left = 0.0
 
-    def update(self, dt):
+    def update(self, dt: float) -> None:
         if self.playback.volume != self._last_volume:
             self._last_volume = self.playback.volume
             self.time_left = VOLUME_HUD_DURATION
         else:
             self.time_left = max(0.0, self.time_left - dt)
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
         if self.time_left <= 0:
             return
         bg = load_image("AlertBackgroundSmall")

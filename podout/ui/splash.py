@@ -12,44 +12,45 @@ SPLASH_TEXT_GAP = 20   # space between the image and the text below it
 class UISplashScreen(UIScreen):
     """A centered splash image with optional text below it."""
 
-    def __init__(self, image="iPodExtraLarge", text="Waiting for iPod", title="", dismissible=False):
+    def __init__(self, image: str = "iPodExtraLarge", text: str = "Waiting for iPod",
+                 title: str = "", dismissible: bool = False) -> None:
         super().__init__(title)
         self._image = image
         self._text = text
         self.dismissible = dismissible
-        self._label = None     # cached rendered text, rebuilt when the values change
+        self._label: pygame.Surface | None = None   # cached rendered text, rebuilt when the values change
 
     @property
-    def image(self):
+    def image(self) -> str:
         return self._image
 
     @image.setter
-    def image(self, value):
+    def image(self, value: str) -> None:
         if value != self._image:
             self._image = value
             self.mark_dirty()
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self._text
 
     @text.setter
-    def text(self, value):
+    def text(self, value: str) -> None:
         if value != self._text:
             self._text = value
             self.mark_dirty()
 
-    def _rebuild(self):
+    def _rebuild(self) -> None:
         self._label = (get_font(SPLASH_FONT_SIZE).render(self._text, True, TEXT_SECONDARY_COLOR)
                        if self._text else None)
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if self.dismissible and event.type == pygame.KEYDOWN and event.key in keys.BACK:
             events.pop_screen()
             return True
         return False
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
         self._ensure_built()
 
         img = load_image(self._image)

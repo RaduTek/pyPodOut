@@ -7,7 +7,7 @@ KEY_PREVIOUSSONG -> AudioPrev, KEY_VOLUMEUP/DOWN -> VolumeUp/Down.
 import pygame
 
 
-def _sdl_key(scancode):
+def _sdl_key(scancode: int) -> int:
     # SDL keycodes for keys without a character are the scancode with bit 30 set.
     return 0x40000000 | scancode
 

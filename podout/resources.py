@@ -8,11 +8,11 @@ _images = {}
 _fonts = {}
 
 
-def image_exists(name):
+def image_exists(name: str) -> bool:
     return os.path.isfile(os.path.join(RES_DIR, name + ".png"))
 
 
-def load_image(name):
+def load_image(name: str) -> pygame.Surface:
     """Load res/<name>.png once and cache it. Requires an initialized display."""
     img = _images.get(name)
     if img is None:
@@ -21,7 +21,7 @@ def load_image(name):
     return img
 
 
-def get_font(size, bold=True):
+def get_font(size: int, bold: bool = True) -> pygame.font.Font:
     key = (size, bold)
     font = _fonts.get(key)
     if font is None:
