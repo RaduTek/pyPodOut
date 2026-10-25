@@ -1,0 +1,26 @@
+# systemd unit for running pyPodOut fullscreen on a Raspberry Pi console (no desktop).
+#
+# Edit User/WorkingDirectory to match your install, then:
+#   sudo cp deploy/podout.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now podout
+#
+# The user must be in the video, render and input groups:
+#   sudo usermod -aG video,render,input pi
+
+[Unit]
+Description=pyPodOut (iPod Out recreation)
+After=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/pyPodOut
+Environment=SDL_VIDEODRIVER=kmsdrm
+Environment=FULLSCREEN=1
+ExecStart=/usr/bin/python3 -u main.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

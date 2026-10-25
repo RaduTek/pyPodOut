@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pygame
@@ -43,8 +44,13 @@ def build_root_menu(playback):
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+    # FULLSCREEN=1: fill the display, scaling 640x480 with the aspect ratio kept (e.g. Pi console via kmsdrm).
+    fullscreen = os.environ.get("FULLSCREEN") == "1"
+    flags = pygame.SCALED | pygame.FULLSCREEN if fullscreen else 0
+    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), flags)
     pygame.display.set_caption("iPod Out")
+    if fullscreen:
+        pygame.mouse.set_visible(False)
     clock = pygame.time.Clock()
 
     playback = Playback()
