@@ -15,7 +15,7 @@ SONGS_TOTAL = 500
 DEMO_QUEUE = [
     Track("Come Together", "The Beatles", "Abbey Road", 259),
     Track("Something", "The Beatles", "Abbey Road", 182),
-    Track("Here Comes the Sun", "The Beatles", "Abbey Road", 185),
+    Track("Here Comes the Sun (Original Version)", "The Beatles", "Abbey Road", 185),
     Track("Because", "The Beatles", "Abbey Road", 165),
 ]
 
@@ -67,8 +67,15 @@ def build_root_menu(playback):
             UIListMenuItem("setting3", "Equalizer", options=[("flat", "Flat"), ("bass_boost", "Bass Boost"), ("treble_boost", "Treble Boost")]),
         ]))
 
+    def open_playlists(item):
+        push_screen(UIMenu("Playlists", [
+            UIMenuItem("playlist1", "My Favorites Playlist Name intended to overflow", "Playlists55"),
+            UIMenuItem("playlist2", "Chill Vibes", "Playlists55"),
+            UIMenuItem("playlist3", "Workout Mix", "Playlists55"),
+        ]))
+
     return UIMenu("iPod", [
-        UIMenuItem("playlists", "Playlists", "Playlists55", chevron=True),
+        UIMenuItem("playlists", "Playlists", "Playlists55", chevron=True, on_select=open_playlists),
         UIMenuItem("artists", "Artists", "Artists55", chevron=True),
         UIMenuItem("albums", "Albums", "Albums55", chevron=True, on_select=open_albums),
         UIMenuItem("songs", "Songs", "Songs55", chevron=True, on_select=open_songs),

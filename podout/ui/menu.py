@@ -9,6 +9,7 @@ from podout.config import (MARGIN_X, MENU_FONT_SIZE, SCREEN_H, SCREEN_W, SCROLL_
                            TEXT_SECONDARY_COLOR, TOP_OFFSET)
 from podout.resources import get_font, image_exists, load_image
 from podout.ui.screen import UIScreen
+from podout.ui.text import Marquee, draw_text, fit_text
 
 SECONDARY_GAP = 8   # vertical gap between the primary and secondary line on large items
 
@@ -81,6 +82,7 @@ class UIMenu(UIScreen):
         self.scroll_y = 0
         self.viewport = pygame.Rect(0, TOP_OFFSET, SCREEN_W, SCREEN_H - TOP_OFFSET)
         self._chevron_hl = None
+        self._marquee = Marquee()   # drives the selected row's primary-text scroll
 
     @property
     def selected_item(self) -> "UIMenuItem | None":
@@ -99,8 +101,14 @@ class UIMenu(UIScreen):
     def select(self, index: int) -> None:
         if not self.items:
             return
-        self.selected_index = max(0, min(index, len(self.items) - 1))
+        new_index = max(0, min(index, len(self.items) - 1))
+        if new_index != self.selected_index:
+            self._marquee.reset()   # restart the scroll on the newly selected row
+        self.selected_index = new_index
         self._scroll_to_selected()
+
+    def update(self, dt: float) -> None:
+        self._marquee.update(dt)
 
     def _scroll_to_selected(self) -> None:
         top = self._item_top(self.selected_index)
@@ -194,28 +202,36 @@ class UIMenu(UIScreen):
             text_right = chevron_x - TEXT_GAP
 
         color = TEXT_HIGHLIGHT_COLOR if selected else TEXT_COLOR
-        label = item.render(item.text, color)
-        # Secondary text is never bold.
         sec_color = TEXT_HIGHLIGHT_COLOR if selected else TEXT_SECONDARY_COLOR
-        sec_bold = False if item.large else True
-        sec = item.render(item.secondary_text, sec_color, bold=sec_bold) if item.secondary_text else None
+        sec_bold = False if item.large else True   # secondary text is never bold on tall rows
+        avail = max(0, text_right - text_x)
+        render_primary = lambda t: item.render(t, color)
+        render_secondary = lambda t: item.render(t, sec_color, sec_bold)
+        # The primary line scrolls while selected and overflowing, else ellipsizes.
+        marquee = self._marquee if selected else None
+        primary_h = item.render(item.text, color).get_height()
 
-        if sec is not None and item.large:
-            # Stack the secondary line beneath the primary one.
-            block_h = label.get_height() + SECONDARY_GAP + sec.get_height()
+        if item.large:
+            # Stack the secondary line beneath the primary one; each line may use
+            # the full width. Secondary is always ellipsized.
+            sec = fit_text(render_secondary, item.secondary_text, avail) if item.secondary_text else None
+            block_h = primary_h + (SECONDARY_GAP + sec.get_height() if sec is not None else 0)
             top = center_y - block_h // 2
-            max_w = max(0, text_right - text_x)
-            for surf, sy in ((label, top), (sec, top + label.get_height() + SECONDARY_GAP)):
-                area = pygame.Rect(0, 0, min(surf.get_width(), max_w), surf.get_height())
-                surface.blit(surf, (text_x, sy), area)
-        else:
+            draw_text(surface, render_primary, item.text, text_x, top + primary_h // 2, avail, marquee)
             if sec is not None:
-                # Standard rows: right-align the secondary text before the chevron.
-                sec_x = text_right - sec.get_width()
-                surface.blit(sec, (sec_x, center_y - sec.get_height() // 2))
-                text_right = sec_x - TEXT_GAP
-            area = pygame.Rect(0, 0, min(label.get_width(), max(0, text_right - text_x)), label.get_height())
-            surface.blit(label, (text_x, center_y - label.get_height() // 2), area)
+                surface.blit(sec, (text_x, top + primary_h + SECONDARY_GAP))
+            return
+
+        # Standard rows: the secondary line sits right-aligned before the chevron
+        # and the primary left-aligned. The secondary is capped at half the width
+        # so it can't crowd out the primary; the primary then uses whatever space
+        # is left, so a short secondary leaves it room to stretch.
+        primary_max = avail
+        if item.secondary_text:
+            sec = fit_text(render_secondary, item.secondary_text, avail // 2)
+            surface.blit(sec, (text_right - sec.get_width(), center_y - sec.get_height() // 2))
+            primary_max = max(0, avail - sec.get_width() - TEXT_GAP)
+        draw_text(surface, render_primary, item.text, text_x, center_y, primary_max, marquee)
 
 
 class UILazyMenu(UIMenu):

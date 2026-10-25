@@ -5,6 +5,7 @@ from podout.config import SCREEN_W, TEXT_COLOR, TEXT_SECONDARY_COLOR
 from podout.playback import Playback
 from podout.resources import get_font, load_image
 from podout.ui.screen import UIScreen
+from podout.ui.text import Marquee, draw_text
 
 ART_POS = (30, 80)
 INFO_X = 300
@@ -20,6 +21,8 @@ class UINowPlaying(UIScreen):
     def __init__(self, playback: Playback) -> None:
         super().__init__("Now Playing")
         self.playback = playback
+        self._title_marquee = Marquee()   # the title scrolls when it overflows
+        self._title = ""
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         # Play/pause, next/previous and volume are handled globally in main.py.
@@ -28,19 +31,30 @@ class UINowPlaying(UIScreen):
             return True
         return False
 
+    def update(self, dt: float) -> None:
+        if self.playback.title != self._title:
+            # New track: restart the title scroll from the beginning.
+            self._title = self.playback.title
+            self._title_marquee.reset()
+        self._title_marquee.update(dt)
+
     def draw(self, surface: pygame.Surface) -> None:
         pb = self.playback
         surface.blit(load_image(pb.artwork), ART_POS)
 
         y = 110
         max_w = SCREEN_W - INFO_X - 30
-        for text, size, color in ((pb.title, 30, TEXT_COLOR),
-                                  (pb.artist, 24, TEXT_SECONDARY_COLOR),
-                                  (pb.album, 24, TEXT_SECONDARY_COLOR),
-                                  (f"{pb.index + 1} of {len(pb.queue)}", 20, TEXT_SECONDARY_COLOR)):
-            label = get_font(size).render(text, True, color)
-            surface.blit(label, (INFO_X, y), pygame.Rect(0, 0, min(label.get_width(), max_w), label.get_height()))
-            y += label.get_height() + 12
+        # Only the title scrolls; artist, album and the counter are ellipsized.
+        for text, size, color, marquee in ((pb.title, 30, TEXT_COLOR, self._title_marquee),
+                                           (pb.artist, 24, TEXT_SECONDARY_COLOR, None),
+                                           (pb.album, 24, TEXT_SECONDARY_COLOR, None),
+                                           (f"{pb.index + 1} of {len(pb.queue)}", 20,
+                                            TEXT_SECONDARY_COLOR, None)):
+            font = get_font(size)
+            render = lambda t, f=font, c=color: f.render(t, True, c)
+            h = font.get_height()
+            draw_text(surface, render, text, INFO_X, y + h // 2, max_w, marquee)
+            y += h + 12
 
         state = load_image("Play40" if pb.playing else "Pause40")
         surface.blit(state, (INFO_X, BAR_RECT.top - state.get_height() - 16))

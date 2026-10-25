@@ -23,6 +23,10 @@ STATUS_BAR_FONT_SIZE = 26
 TOP_OFFSET = STATUS_BAR_HEIGHT
 MENU_FONT_SIZE = 30
 
+# Overflowing text (a selected menu row, the Now Playing title) scrolls (marquee).
+MARQUEE_SPEED = 60     # px/s the text slides while scrolling
+MARQUEE_HOLD = 1.5     # seconds the text pauses at each end
+
 # Scroll hint drawn at the right edge of overflowing menus (clear of the chevrons).
 SCROLL_HINT_INSET = 1
 SCROLL_HINT_WIDTH = 5
