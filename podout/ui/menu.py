@@ -216,3 +216,72 @@ class UIMenu(UIScreen):
                 text_right = sec_x - TEXT_GAP
             area = pygame.Rect(0, 0, min(label.get_width(), max(0, text_right - text_x)), label.get_height())
             surface.blit(label, (text_x, center_y - label.get_height() // 2), area)
+
+
+class UILazyMenu(UIMenu):
+    """A UIMenu whose items are fetched in batches as the selection nears the end.
+
+    `loader(offset, limit)` returns the items for [offset, offset + limit); items
+    are only ever appended, so `offset` is always the current loaded count.
+    When `total_count` is known it is passed so the scroll hint is sized against
+    the full list from the start and does not jump as batches load.
+    """
+
+    def __init__(self, title: str, loader: Callable[[int, int], Iterable[UIMenuItem]],
+                 total_count: int | None = None, batch_size: int = 20,
+                 item_height: int | None = None, prefetch_margin: int = 5) -> None:
+        super().__init__(title, [])
+        self.loader = loader
+        self.total_count = total_count
+        self.batch_size = batch_size
+        self.item_height = item_height
+        self.prefetch_margin = prefetch_margin
+        self._exhausted = False
+        self._fill_viewport()
+
+    def _content_height(self) -> int:
+        loaded = super()._content_height()
+        if self.total_count is not None and self.item_height:
+            return loaded + max(0, self.total_count - len(self.items)) * self.item_height
+        return loaded
+
+    def select(self, index: int) -> None:
+        super().select(index)
+        self._maybe_load_more()
+
+    def _maybe_load_more(self) -> None:
+        while not self._exhausted and self.selected_index >= len(self.items) - self.prefetch_margin:
+            if not self._load_next_batch():
+                break
+
+    def _fill_viewport(self) -> None:
+        # Load enough to cover the viewport (plus a batch of margin) on first show.
+        while not self._exhausted and super()._content_height() <= self.viewport.height:
+            if not self._load_next_batch():
+                break
+
+    def _load_next_batch(self) -> bool:
+        """Fetch and append the next batch; return True if any items were added."""
+        offset = len(self.items)
+        limit = self.batch_size
+        if self.total_count is not None:
+            limit = min(limit, self.total_count - offset)
+        if self._exhausted or limit <= 0:
+            self._exhausted = True
+            return False
+
+        batch = list(self.loader(offset, limit))
+        for item in batch:
+            item.menu = self
+            self.items.append(item)
+        if self.item_height is None and self.items:
+            self.item_height = self.items[0].height
+
+        if self.total_count is not None:
+            self._exhausted = len(self.items) >= self.total_count
+        elif len(batch) < limit:
+            self._exhausted = True
+
+        if batch:
+            self.mark_dirty()
+        return bool(batch)

@@ -7,7 +7,10 @@ from podout import keys
 from podout.config import FPS, SCREEN_H, SCREEN_W
 from podout.events import push_screen
 from podout.playback import Playback, Track
-from podout.ui import ScreenManager, UIMenu, UIMenuItem, UINowPlaying, UIStatusBar, UIVolumeHUD, UISplashScreen
+from podout.ui import (ScreenManager, UIMenu, UIMenuItem, UILazyMenu, UINowPlaying,
+                       UIStatusBar, UIVolumeHUD, UISplashScreen)
+
+SONGS_TOTAL = 500
 
 DEMO_QUEUE = [
     Track("Come Together", "The Beatles", "Abbey Road", 259),
@@ -27,9 +30,24 @@ def build_albums_menu():
     ])
 
 
+def _fmt_track_len(i):
+    seconds = 120 + (i * 37) % 180   # a deterministic 2:00-4:59 pseudo-duration
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+
+def build_songs_menu():
+    def load_songs(offset: int, limit: int) -> list[UIMenuItem]:
+        return [UIMenuItem(f"song{i}", f"Track {i + 1}", secondary_text=_fmt_track_len(i))
+                for i in range(offset, min(offset + limit, SONGS_TOTAL))]
+    return UILazyMenu("Songs", load_songs, total_count=SONGS_TOTAL)
+
+
 def build_root_menu(playback):
     def open_albums(item):
         push_screen(build_albums_menu())
+
+    def open_songs(item):
+        push_screen(build_songs_menu())
 
     def open_now_playing(item):
         if not playback.has_track:
@@ -53,7 +71,7 @@ def build_root_menu(playback):
         UIMenuItem("playlists", "Playlists", "Playlists55"),
         UIMenuItem("artists", "Artists", "Artists55"),
         UIMenuItem("albums", "Albums", "Albums55", on_select=open_albums),
-        UIMenuItem("songs", "Songs", "Songs55"),
+        UIMenuItem("songs", "Songs", "Songs55", on_select=open_songs),
         UIMenuItem("podcasts", "Podcasts", "Podcasts55"),
         UIMenuItem("genres", "Genres", "Genres55"),
         UIMenuItem("composers", "Composers", "Composers55"),
