@@ -7,7 +7,7 @@ from podout import keys
 from podout.config import FPS, SCREEN_H, SCREEN_W
 from podout.events import push_screen
 from podout.playback import Playback, Track
-from podout.ui import ScreenManager, UIMenu, UIMenuItem, UINowPlaying, UIStatusBar, UIVolumeHUD
+from podout.ui import ScreenManager, UIMenu, UIMenuItem, UINowPlaying, UIStatusBar, UIVolumeHUD, UISplashScreen
 
 DEMO_QUEUE = [
     Track("Come Together", "The Beatles", "Abbey Road", 259),
@@ -22,7 +22,7 @@ def build_albums_menu():
               ("Rumours", "Fleetwood Mac"), ("Discovery", "Daft Punk"),
               ("OK Computer", "Radiohead"), ("Blue", "Joni Mitchell")]
     return UIMenu("Albums", [
-        UIMenuItem(f"album{i}", name, "AlbumPlaceholder88", height=88, data=artist)
+        UIMenuItem(f"album{i}", name, "AlbumPlaceholder88", large=True, data=artist, secondary_text=artist)
         for i, (name, artist) in enumerate(albums)
     ])
 
@@ -36,7 +36,20 @@ def build_root_menu(playback):
             playback.set_queue(DEMO_QUEUE)
         push_screen(UINowPlaying(playback))
 
-    return UIMenu("Music", [
+    def toggle_item(item: UIMenuItem):
+        if item.secondary_text == "On":
+            item.secondary_text = "Off"
+        else:
+            item.secondary_text = "On"
+
+    def open_settings(item):
+        push_screen(UIMenu("Settings", [
+            UIMenuItem("setting1", "Setting 1", secondary_text="On", on_select=toggle_item),
+            UIMenuItem("setting2", "Setting 2", secondary_text="Off", on_select=toggle_item),
+            UIMenuItem("setting3", "Setting 3", secondary_text="Default", chevron=True),
+        ]))
+
+    return UIMenu("iPod", [
         UIMenuItem("playlists", "Playlists", "Playlists55"),
         UIMenuItem("artists", "Artists", "Artists55"),
         UIMenuItem("albums", "Albums", "Albums55", on_select=open_albums),
@@ -47,6 +60,7 @@ def build_root_menu(playback):
         UIMenuItem("audiobooks", "Audiobooks", "Audiobooks55"),
         UIMenuItem("genius", "Genius", "Genius55"),
         UIMenuItem("nowplaying", "Now Playing", "NowPlaying55", on_select=open_now_playing),
+        UIMenuItem("settings", "Settings", on_select=open_settings)
     ])
 
 
@@ -83,6 +97,8 @@ def main():
     playback = Playback()
     manager = ScreenManager(UIStatusBar(playback), overlays=[UIVolumeHUD(playback)])
     manager.push(build_root_menu(playback), animated=False)
+
+    manager.push(UISplashScreen(dismissible=True), animated=False)
 
     running = True
     while running:

@@ -9,6 +9,7 @@ class UIScreen:
     def __init__(self, title=""):
         self.title = title
         self.manager = None
+        self._dirty = True
 
     def on_enter(self):
         """Called when this screen becomes the top of the stack."""
@@ -22,6 +23,19 @@ class UIScreen:
 
     def update(self, dt):
         """Advance per-frame state; dt is in seconds."""
+
+    def mark_dirty(self):
+        """Flag cached render state as stale; it is rebuilt on the next draw."""
+        self._dirty = True
+
+    def _rebuild(self):
+        """Rebuild cached render state. Override in screens that cache renders."""
+
+    def _ensure_built(self):
+        """Call at the top of draw() before touching cached render state."""
+        if self._dirty:
+            self._rebuild()
+            self._dirty = False
 
     def draw(self, surface):
         """Render onto surface (already cleared to the background color)."""

@@ -2,8 +2,8 @@ import os
 
 SCREEN_W = 640
 SCREEN_H = 480
-FPS = 60
-TRANSITION_DURATION = 0.3   # seconds, horizontal slide between screens
+FPS = 30
+TRANSITION_DURATION = 0.4   # seconds, horizontal slide between screens
 VOLUME_STEP = 1 / 16        # volume change per key press
 VOLUME_HUD_DURATION = 1.5   # seconds the volume overlay stays up
 PREVIOUS_RESTART_THRESHOLD = 3.0   # seconds; "previous" restarts the track past this point
@@ -13,10 +13,10 @@ RES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BG_COLOR = (0, 0, 0)
 TEXT_COLOR = (230, 230, 230)
 TEXT_HIGHLIGHT_COLOR = (255, 255, 255)
-TEXT_SECONDARY_COLOR = (160, 160, 160)
+TEXT_SECONDARY_COLOR = (160, 170, 192)
 
-MARGIN_X = 11          # left/right content margin
-TEXT_GAP = 14          # space between icon and text / text and chevron
+MARGIN_X = 8          # left/right content margin
+TEXT_GAP = 12          # space between icon and text / text and chevron
 # 480 - 40 = 440 = lcm(55, 88): exactly 8 rows of 55px or 5 rows of 88px below the bar.
 STATUS_BAR_HEIGHT = 40
 STATUS_BAR_FONT_SIZE = 26
