@@ -10,6 +10,8 @@ MENU_ITEM_SELECTED = pygame.event.custom_type()
 # event.screen, event.animated
 PUSH_SCREEN = pygame.event.custom_type()
 POP_SCREEN = pygame.event.custom_type()
+# event.key -- a select/media key held past the hold threshold (see podout.input)
+KEY_HOLD = pygame.event.custom_type()
 
 
 def push_screen(screen: "UIScreen", animated: bool = True) -> None:

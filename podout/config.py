@@ -8,6 +8,13 @@ VOLUME_STEP = 1 / 16        # volume change per key press
 VOLUME_HUD_DURATION = 1.5   # seconds the volume overlay stays up
 PREVIOUS_RESTART_THRESHOLD = 3.0   # seconds; "previous" restarts the track past this point
 
+# Input timing (podout.input). Held up/down/volume keys auto-repeat; held
+# select/media keys fire a one-shot hold event once past KEY_HOLD_TIME.
+KEY_REPEAT_DELAY = 0.4      # seconds a repeat key is held before it starts repeating
+KEY_REPEAT_INTERVAL = 0.12  # seconds between repeats while the key stays held
+KEY_HOLD_TIME = 0.6         # seconds a select/media key is held before its hold event fires
+SEEK_STEP = 10.0            # seconds a NEXT/PREVIOUS hold seeks within the track
+
 RES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "res")
 
 BG_COLOR = (0, 0, 0)

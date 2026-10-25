@@ -68,6 +68,14 @@ class Playback:
         if self.has_track:
             self.playing = not self.playing
 
+    def stop(self) -> None:
+        self.playing = False
+        self.position = 0.0
+
+    def seek(self, delta: float) -> None:
+        if self.has_track:
+            self.position = max(0.0, min(self.duration, self.position + delta))
+
     def next(self) -> None:
         if self.index + 1 < len(self.queue):
             self.index += 1

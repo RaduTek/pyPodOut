@@ -3,9 +3,10 @@ import sys
 
 import pygame
 
-from podout import keys
-from podout.config import FPS, SCREEN_H, SCREEN_W
+from podout import events, keys
+from podout.config import FPS, SCREEN_H, SCREEN_W, SEEK_STEP
 from podout.events import push_screen
+from podout.input import InputManager
 from podout.playback import Playback, Track
 from podout.ui import (ScreenManager, UIMenu, UIMenuItem, UILazyMenu, UIListMenuItem, UINowPlaying,
                        UIStatusBar, UIVolumeHUD, UISplashScreen)
@@ -93,6 +94,17 @@ def build_root_menu(playback):
 
 def handle_media_key(event, playback):
     """Global playback keys; works on every screen, even mid-transition."""
+    if event.type == events.KEY_HOLD:
+        # Holding a media key: seek within the track, or stop on play/pause.
+        if event.key in keys.NEXT:
+            playback.seek(+SEEK_STEP)
+        elif event.key in keys.PREVIOUS:
+            playback.seek(-SEEK_STEP)
+        elif event.key in keys.PLAY_PAUSE:
+            playback.stop()
+        else:
+            return False
+        return True
     if event.type != pygame.KEYDOWN:
         return False
     if event.key in keys.PLAY_PAUSE:
@@ -127,14 +139,24 @@ def main():
 
     manager.push(UISplashScreen(dismissible=True), animated=False)
 
+    def dispatch_key(event):
+        # Route a (possibly synthetic) key event through the media keys, then the screens.
+        if not handle_media_key(event, playback):
+            manager.handle_event(event)
+
+    key_input = InputManager(dispatch_key)
+
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif not handle_media_key(event, playback):
+            elif event.type in (pygame.KEYDOWN, pygame.KEYUP):
+                key_input.handle_key(event)
+            else:
                 manager.handle_event(event)
         dt = clock.get_time() / 1000.0
+        key_input.update(dt)
         playback.update(dt)
         manager.update(dt)
         manager.draw(screen)
