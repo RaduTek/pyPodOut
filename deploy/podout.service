@@ -17,6 +17,8 @@ Type=simple
 User=pi
 WorkingDirectory=/home/pi/pyPodOut
 Environment=SDL_VIDEODRIVER=kmsdrm
+# Use the GLES2 renderer explicitly; SDL's default pick fails with "EGL not initialized" on a Pi 3.
+Environment=SDL_RENDER_DRIVER=opengles2
 Environment=FULLSCREEN=1
 ExecStart=/usr/bin/python3 -u main.py
 Restart=on-failure
