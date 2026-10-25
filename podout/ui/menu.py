@@ -285,3 +285,68 @@ class UILazyMenu(UIMenu):
         if batch:
             self.mark_dirty()
         return bool(batch)
+
+
+class UIListMenuItem(UIMenuItem):
+    """A UIMenuItem that opens a submenu of options when selected.
+
+    `options` is a list of (key, label) pairs: the label is shown in the
+    submenu and, for the chosen option, as this item's secondary text, while
+    `value` holds the key of the current choice. Picking an option in the
+    submenu updates `value`, pops back, and fires `on_select`.
+    """
+
+    def __init__(self, id: str, text: str, options: list[tuple[Any, str]],
+                 icon: str | None = None, highlight_icon: str | None = None,
+                 large: bool = False,
+                 on_select: Callable[["UIListMenuItem"], Any] | None = None,
+                 data: Any = None, value: Any = None) -> None:
+
+        def on_select_self(item) -> None:
+            self._open_options()
+
+        # Opening a submenu, so always show the chevron. The base class's
+        # `on_select` fires on activation (and opens the submenu), so keep the
+        # caller's value-change callback separately.
+        super().__init__(id, text, icon, highlight_icon, large, True, on_select_self, data)
+        self._on_change = on_select
+        self.options = options
+        self._value: Any = None
+        # Default to the first option when no (matching) value is given.
+        self.value = value if self._index_of(value) is not None else (
+            options[0][0] if options else None)
+
+    @property
+    def value(self) -> Any:
+        return self._value
+
+    @value.setter
+    def value(self, key: Any) -> None:
+        self._value = key
+        index = self._index_of(key)
+        self.secondary_text = self.options[index][1] if index is not None else ""
+
+    def _index_of(self, key: Any) -> int | None:
+        for i, (k, _) in enumerate(self.options):
+            if k == key:
+                return i
+        return None
+
+    def _open_options(self) -> None:
+        def make_handler(key: Any) -> Callable[[UIMenuItem], None]:
+            def handler(_item: UIMenuItem) -> None:
+                self.value = key
+                events.pop_screen()
+                if self._on_change:
+                    self._on_change(self)
+            return handler
+
+        items = [UIMenuItem(f"{self.id}:{key}", label, chevron=False,
+                            on_select=make_handler(key))
+                 for key, label in self.options]
+        menu = UIMenu(self.text, items)
+        # Start the highlight on the current choice.
+        current = self._index_of(self._value)
+        if current is not None:
+            menu.select(current)
+        events.push_screen(menu)

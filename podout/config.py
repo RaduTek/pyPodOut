@@ -13,7 +13,7 @@ RES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BG_COLOR = (0, 0, 0)
 TEXT_COLOR = (230, 230, 230)
 TEXT_HIGHLIGHT_COLOR = (255, 255, 255)
-TEXT_SECONDARY_COLOR = (160, 170, 192)
+TEXT_SECONDARY_COLOR = (176, 176, 176)
 
 MARGIN_X = 8          # left/right content margin
 TEXT_GAP = 12          # space between icon and text / text and chevron

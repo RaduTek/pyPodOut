@@ -1,5 +1,5 @@
 from podout.ui.screen import UIScreen, ScreenManager
-from podout.ui.menu import UIMenu, UIMenuItem, UILazyMenu
+from podout.ui.menu import UIMenu, UIMenuItem, UILazyMenu, UIListMenuItem
 from podout.ui.now_playing import UINowPlaying
 from podout.ui.splash import UISplashScreen
 from podout.ui.status_bar import UIStatusBar

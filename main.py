@@ -7,7 +7,7 @@ from podout import keys
 from podout.config import FPS, SCREEN_H, SCREEN_W
 from podout.events import push_screen
 from podout.playback import Playback, Track
-from podout.ui import (ScreenManager, UIMenu, UIMenuItem, UILazyMenu, UINowPlaying,
+from podout.ui import (ScreenManager, UIMenu, UIMenuItem, UILazyMenu, UIListMenuItem, UINowPlaying,
                        UIStatusBar, UIVolumeHUD, UISplashScreen)
 
 SONGS_TOTAL = 500
@@ -62,23 +62,23 @@ def build_root_menu(playback):
 
     def open_settings(item):
         push_screen(UIMenu("Settings", [
-            UIMenuItem("setting1", "Setting 1", secondary_text="On", on_select=toggle_item),
-            UIMenuItem("setting2", "Setting 2", secondary_text="Off", on_select=toggle_item),
-            UIMenuItem("setting3", "Setting 3", secondary_text="Default", chevron=True),
+            UIMenuItem("setting1", "Shuffle", secondary_text="On", on_select=toggle_item),
+            UIMenuItem("setting2", "Repeat", secondary_text="Off", on_select=toggle_item),
+            UIListMenuItem("setting3", "Equalizer", options=[("flat", "Flat"), ("bass_boost", "Bass Boost"), ("treble_boost", "Treble Boost")]),
         ]))
 
     return UIMenu("iPod", [
-        UIMenuItem("playlists", "Playlists", "Playlists55"),
-        UIMenuItem("artists", "Artists", "Artists55"),
-        UIMenuItem("albums", "Albums", "Albums55", on_select=open_albums),
-        UIMenuItem("songs", "Songs", "Songs55", on_select=open_songs),
-        UIMenuItem("podcasts", "Podcasts", "Podcasts55"),
-        UIMenuItem("genres", "Genres", "Genres55"),
-        UIMenuItem("composers", "Composers", "Composers55"),
-        UIMenuItem("audiobooks", "Audiobooks", "Audiobooks55"),
-        UIMenuItem("genius", "Genius", "Genius55"),
-        UIMenuItem("nowplaying", "Now Playing", "NowPlaying55", on_select=open_now_playing),
-        UIMenuItem("settings", "Settings", on_select=open_settings)
+        UIMenuItem("playlists", "Playlists", "Playlists55", chevron=True),
+        UIMenuItem("artists", "Artists", "Artists55", chevron=True),
+        UIMenuItem("albums", "Albums", "Albums55", chevron=True, on_select=open_albums),
+        UIMenuItem("songs", "Songs", "Songs55", chevron=True, on_select=open_songs),
+        UIMenuItem("podcasts", "Podcasts", "Podcasts55", chevron=True),
+        UIMenuItem("genres", "Genres", "Genres55", chevron=True),
+        UIMenuItem("composers", "Composers", "Composers55", chevron=True),
+        UIMenuItem("audiobooks", "Audiobooks", "Audiobooks55", chevron=True),
+        UIMenuItem("genius", "Genius", "Genius55", chevron=True),
+        UIMenuItem("nowplaying", "Now Playing", "NowPlaying55",  chevron=True, on_select=open_now_playing),
+        UIMenuItem("settings", "Settings", chevron=True, on_select=open_settings)
     ])
 
 
