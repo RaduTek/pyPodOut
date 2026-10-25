@@ -3,6 +3,7 @@ import os
 SCREEN_W = 640
 SCREEN_H = 480
 FPS = 60
+TRANSITION_DURATION = 0.3   # seconds, horizontal slide between screens
 
 RES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "res")
 

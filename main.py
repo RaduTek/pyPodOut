@@ -49,7 +49,7 @@ def main():
 
     playback = Playback()
     manager = ScreenManager(UIStatusBar(playback))
-    manager.push(build_root_menu(playback))
+    manager.push(build_root_menu(playback), animated=False)
 
     running = True
     while running:
