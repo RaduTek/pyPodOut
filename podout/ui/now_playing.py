@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from podout import events, keys
@@ -9,6 +11,10 @@ from podout.ui.text import Marquee, draw_text
 
 CONTENT_MARGIN = 35          # left/right inset of the screen content
 ART_POS = (30, 90)
+COVER_SIZE = 240             # fixed on-screen size of the (un-turned) cover art, any source
+COVER_ANGLE = 8             # degrees the cover is turned about its vertical axis (facing right)
+REFLECTION_FRACTION = 3      # reflection height = artwork height / this
+COVER_SUPERSAMPLE = 3        # warp at this multiple then shrink, to antialias the turned edges
 INFO_X = 300
 INFO_TOP = 130               # top of the text block (nudged down from the artwork line)
 LINE_GAP = 12                # vertical gap between text lines
@@ -32,7 +38,7 @@ class UINowPlaying(UIScreen):
         self.playback = playback
         self._title_marquee = Marquee()   # the title scrolls when it overflows
         self._title = ""
-        self._reflections: dict[str, pygame.Surface] = {}   # artwork name -> cached reflection
+        self._covers: dict[str, pygame.Surface] = {}   # artwork name -> cached turned cover + reflection
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         # Play/pause, next/previous and volume are handled globally in main.py.
@@ -51,10 +57,12 @@ class UINowPlaying(UIScreen):
     def draw(self, surface: pygame.Surface) -> None:
         pb = self.playback
 
-        art = load_image(pb.artwork)
-        surface.blit(art, ART_POS)
-        reflection = self._album_reflection(pb.artwork)
-        surface.blit(reflection, (ART_POS[0], ART_POS[1] + art.get_height()))
+        cover = self._cover(pb.artwork)
+        # Bottom-anchor where the un-warped reflection ended, and center on the
+        # cover's fixed footprint; the turned cover grows upward from there.
+        baseline = ART_POS[1] + COVER_SIZE + COVER_SIZE // REFLECTION_FRACTION
+        x = ART_POS[0] + COVER_SIZE // 2 - cover.get_width() // 2
+        surface.blit(cover, (x, baseline - cover.get_height()))
 
         self._draw_mode_icons(surface)
         self._draw_info(surface)
@@ -131,19 +139,79 @@ class UINowPlaying(UIScreen):
             filled = pygame.transform.scale(load_image("ProgressBarFilled"), (filled_w, BAR_HEIGHT))
             surface.blit(filled, bar.topleft)
 
-    def _album_reflection(self, name: str) -> pygame.Surface:
-        """A vertically flipped copy of the artwork, fading out downwards."""
-        reflection = self._reflections.get(name)
-        if reflection is None:
+    def _cover(self, name: str) -> pygame.Surface:
+        """The artwork with its reflection, turned about the vertical axis so it
+        faces slightly to the right (as the iPod classic Now Playing does)."""
+        cover = self._covers.get(name)
+        if cover is None:
             art = load_image(name)
-            flipped = pygame.transform.flip(art, False, True)
-            # Only the portion nearest the artwork reads as a reflection.
-            h = flipped.get_height() // 3
-            reflection = flipped.subsurface((0, 0, flipped.get_width(), h)).copy()
-            fade = pygame.Surface((reflection.get_width(), h), pygame.SRCALPHA)
-            for row in range(h):
-                alpha = int(110 * (1 - row / h))   # strongest at the top, fading to 0
-                fade.fill((255, 255, 255, alpha), pygame.Rect(0, row, reflection.get_width(), 1))
+            # Normalize any source to the fixed cover footprint.
+            if art.get_size() != (COVER_SIZE, COVER_SIZE):
+                art = pygame.transform.smoothscale(art, (COVER_SIZE, COVER_SIZE))
+            w, h = art.get_size()
+            rh = h // REFLECTION_FRACTION
+
+            # Reflection: the top slice of the vertically flipped artwork, fading out.
+            reflection = pygame.transform.flip(art, False, True).subsurface((0, 0, w, rh)).copy()
+            fade = pygame.Surface((w, rh), pygame.SRCALPHA)
+            for row in range(rh):
+                alpha = int(110 * (1 - row / rh))   # strongest at the contact edge, fading to 0
+                fade.fill((255, 255, 255, alpha), pygame.Rect(0, row, w, 1))
             reflection.blit(fade, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-            self._reflections[name] = reflection
-        return reflection
+
+            # Warp the artwork and reflection together so they stay a single plane.
+            combined = pygame.Surface((w, h + rh), pygame.SRCALPHA)
+            combined.blit(art, (0, 0))
+            combined.blit(reflection, (0, h))
+            cover = self._rotate_y(combined, COVER_ANGLE)
+            self._covers[name] = cover
+        return cover
+
+    @staticmethod
+    def _rotate_y(src: pygame.Surface, angle_deg: float,
+                  supersample: int = COVER_SUPERSAMPLE) -> pygame.Surface:
+        """Perspective-project `src` as if rotated about its vertical axis.
+
+        Each source column becomes a vertical column in the result, scaled and
+        placed by a one-point projection: a positive angle turns the plane to
+        face right, so its left edge comes nearer (taller) and its right recedes.
+
+        The warp point-samples, so it is run at `supersample`x resolution and
+        smoothscaled back down to antialias the turned edges and the content.
+        """
+        if supersample > 1:
+            w, h = src.get_size()
+            hi = pygame.transform.smoothscale(src, (w * supersample, h * supersample))
+            warped = UINowPlaying._rotate_y(hi, angle_deg, supersample=1)
+            target = (max(1, round(warped.get_width() / supersample)),
+                      max(1, round(warped.get_height() / supersample)))
+            return pygame.transform.smoothscale(warped, target)
+
+        w, h = src.get_size()
+        theta = math.radians(angle_deg)
+        sin, cos = math.sin(theta), math.cos(theta)
+        depth = 2.0 * w          # camera distance; focal length == depth so angle 0 is identity
+        half = w / 2.0
+
+        def screen_x(x: float) -> float:     # project model x in [-half, half]
+            return x * cos * depth / (depth + x * sin)
+
+        def scale_at(x: float) -> float:     # foreshortening of the column at model x
+            return depth / (depth + x * sin)
+
+        left, right = screen_x(-half), screen_x(half)
+        out_w = max(1, math.ceil(right - left))
+        out_h = max(1, math.ceil(h * max(scale_at(-half), scale_at(half))))
+        out = pygame.Surface((out_w, out_h), pygame.SRCALPHA)
+        mid_y = out_h / 2.0
+
+        for dx in range(out_w):
+            sx = dx + left
+            # Invert screen_x to find the source column feeding this output column.
+            x = sx * depth / (cos * depth - sx * sin)
+            x = max(-half, min(half, x))
+            col_h = max(1, round(h * scale_at(x)))
+            src_x = max(0, min(w - 1, round(x + half)))
+            column = pygame.transform.scale(src.subsurface((src_x, 0, 1, h)), (1, col_h))
+            out.blit(column, (dx, round(mid_y - col_h / 2)))
+        return out
