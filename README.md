@@ -17,12 +17,16 @@ pip install pygame
 python main.py
 ```
 
-| Key | Action |
-| --- | --- |
-| Up / Down | Move the selection |
-| Enter | Open the selected item |
-| Esc / Backspace | Go back |
-| Space | Play / pause (on Now Playing) |
+| Key | Remote | Action |
+| --- | --- | --- |
+| Up / Down | Up / Down | Move the selection |
+| Enter | Select | Open the selected item |
+| Esc / Backspace | Menu | Go back |
+| Space | Play/Pause | Play / pause |
+| Left / Right | Previous / Next | Previous / next track |
+| - / + | Volume Down / Up | Change volume |
+
+The playback and volume keys work on every screen. Keyboard media keys work too.
 
 Set `FULLSCREEN=1` to fill the display. The picture is scaled with its 4:3 aspect ratio kept, and the mouse cursor is hidden.
 
@@ -31,6 +35,7 @@ Set `FULLSCREEN=1` to fill the display. The picture is scaled with its 4:3 aspec
 ```
 main.py                  entry point: builds the menus, runs the event/draw loop
 podout/config.py         screen size, layout and timing constants
+podout/keys.py           key groups shared by keyboard and IR remote
 podout/playback.py       shared playback state
 podout/resources.py      cached image/font loading from res/
 podout/events.py         custom pygame events (screen push/pop, menu selection)
@@ -39,7 +44,9 @@ podout/ui/menu.py        UIMenu / UIMenuItem
 podout/ui/now_playing.py UINowPlaying
 podout/ui/status_bar.py  UIStatusBar (title + play state)
 podout/ui/transition.py  horizontal slide transition
+podout/ui/volume_hud.py  UIVolumeHUD (volume overlay)
 deploy/podout.service    systemd unit for the Raspberry Pi
+deploy/remote.toml       ir-keytable keymap for the IR remote
 ```
 
 ## Running on a Raspberry Pi without a desktop

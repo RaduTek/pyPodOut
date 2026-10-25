@@ -28,9 +28,10 @@ class UIScreen:
 
 
 class ScreenManager:
-    def __init__(self, status_bar=None):
+    def __init__(self, status_bar=None, overlays=()):
         self.stack = []
         self.status_bar = status_bar
+        self.overlays = list(overlays)   # drawn above everything, e.g. the volume HUD
         self.transition = None
         self._buffers = None
 
@@ -96,6 +97,8 @@ class ScreenManager:
                 self.transition = None
         if self.top:
             self.top.update(dt)
+        for overlay in self.overlays:
+            overlay.update(dt)
 
     def _get_buffers(self, size):
         if self._buffers is None or self._buffers[0].get_size() != size:
@@ -116,3 +119,5 @@ class ScreenManager:
             self.top.draw(surface)
         if self.status_bar:
             self.status_bar.draw(surface, self.top.title if self.top else "")
+        for overlay in self.overlays:
+            overlay.draw(surface)

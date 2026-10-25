@@ -4,6 +4,9 @@ SCREEN_W = 640
 SCREEN_H = 480
 FPS = 60
 TRANSITION_DURATION = 0.3   # seconds, horizontal slide between screens
+VOLUME_STEP = 1 / 16        # volume change per key press
+VOLUME_HUD_DURATION = 1.5   # seconds the volume overlay stays up
+PREVIOUS_RESTART_THRESHOLD = 3.0   # seconds; "previous" restarts the track past this point
 
 RES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "res")
 

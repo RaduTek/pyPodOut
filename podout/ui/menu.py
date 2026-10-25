@@ -3,7 +3,7 @@ from typing import Any, Callable, Optional
 
 import pygame
 
-from podout import events
+from podout import events, keys
 from podout.config import (MARGIN_X, MENU_FONT_SIZE, SCREEN_H, SCREEN_W, SCROLL_HINT_INSET,
                            SCROLL_HINT_MIN_THUMB, SCROLL_HINT_THUMB_COLOR, SCROLL_HINT_TRACK_COLOR,
                            SCROLL_HINT_WIDTH, TEXT_COLOR, TEXT_GAP, TEXT_HIGHLIGHT_COLOR,
@@ -78,13 +78,13 @@ class UIMenu(UIScreen):
     def handle_event(self, event):
         if event.type != pygame.KEYDOWN:
             return False
-        if event.key == pygame.K_UP:
+        if event.key in keys.UP:
             self.select(self.selected_index - 1)
-        elif event.key == pygame.K_DOWN:
+        elif event.key in keys.DOWN:
             self.select(self.selected_index + 1)
-        elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+        elif event.key in keys.SELECT:
             self.activate()
-        elif event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
+        elif event.key in keys.BACK:
             if not (self.manager and self.manager.depth > 1):
                 return False
             events.pop_screen()

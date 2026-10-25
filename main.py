@@ -3,10 +3,18 @@ import sys
 
 import pygame
 
+from podout import keys
 from podout.config import FPS, SCREEN_H, SCREEN_W
 from podout.events import push_screen
-from podout.playback import Playback
-from podout.ui import ScreenManager, UIMenu, UIMenuItem, UINowPlaying, UIStatusBar
+from podout.playback import Playback, Track
+from podout.ui import ScreenManager, UIMenu, UIMenuItem, UINowPlaying, UIStatusBar, UIVolumeHUD
+
+DEMO_QUEUE = [
+    Track("Come Together", "The Beatles", "Abbey Road", 259),
+    Track("Something", "The Beatles", "Abbey Road", 182),
+    Track("Here Comes the Sun", "The Beatles", "Abbey Road", 185),
+    Track("Because", "The Beatles", "Abbey Road", 165),
+]
 
 
 def build_albums_menu():
@@ -25,7 +33,7 @@ def build_root_menu(playback):
 
     def open_now_playing(item):
         if not playback.has_track:
-            playback.load("Here Comes the Sun", "The Beatles", "Abbey Road", duration=185)
+            playback.set_queue(DEMO_QUEUE)
         push_screen(UINowPlaying(playback))
 
     return UIMenu("Music", [
@@ -42,6 +50,25 @@ def build_root_menu(playback):
     ])
 
 
+def handle_media_key(event, playback):
+    """Global playback keys; works on every screen, even mid-transition."""
+    if event.type != pygame.KEYDOWN:
+        return False
+    if event.key in keys.PLAY_PAUSE:
+        playback.toggle()
+    elif event.key in keys.NEXT:
+        playback.next()
+    elif event.key in keys.PREVIOUS:
+        playback.previous()
+    elif event.key in keys.VOLUME_UP:
+        playback.change_volume(+1)
+    elif event.key in keys.VOLUME_DOWN:
+        playback.change_volume(-1)
+    else:
+        return False
+    return True
+
+
 def main():
     pygame.init()
     # FULLSCREEN=1: fill the display, scaling 640x480 with the aspect ratio kept (e.g. Pi console via kmsdrm).
@@ -54,7 +81,7 @@ def main():
     clock = pygame.time.Clock()
 
     playback = Playback()
-    manager = ScreenManager(UIStatusBar(playback))
+    manager = ScreenManager(UIStatusBar(playback), overlays=[UIVolumeHUD(playback)])
     manager.push(build_root_menu(playback), animated=False)
 
     running = True
@@ -62,7 +89,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            else:
+            elif not handle_media_key(event, playback):
                 manager.handle_event(event)
         dt = clock.get_time() / 1000.0
         playback.update(dt)

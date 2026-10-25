@@ -1,6 +1,6 @@
 import pygame
 
-from podout import events
+from podout import events, keys
 from podout.config import SCREEN_W, TEXT_COLOR, TEXT_SECONDARY_COLOR
 from podout.resources import get_font, load_image
 from podout.ui.screen import UIScreen
@@ -21,15 +21,11 @@ class UINowPlaying(UIScreen):
         self.playback = playback
 
     def handle_event(self, event):
-        if event.type != pygame.KEYDOWN:
-            return False
-        if event.key == pygame.K_SPACE:
-            self.playback.toggle()
-        elif event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
+        # Play/pause, next/previous and volume are handled globally in main.py.
+        if event.type == pygame.KEYDOWN and event.key in keys.BACK:
             events.pop_screen()
-        else:
-            return False
-        return True
+            return True
+        return False
 
     def draw(self, surface):
         pb = self.playback
@@ -39,7 +35,8 @@ class UINowPlaying(UIScreen):
         max_w = SCREEN_W - INFO_X - 30
         for text, size, color in ((pb.title, 30, TEXT_COLOR),
                                   (pb.artist, 24, TEXT_SECONDARY_COLOR),
-                                  (pb.album, 24, TEXT_SECONDARY_COLOR)):
+                                  (pb.album, 24, TEXT_SECONDARY_COLOR),
+                                  (f"{pb.index + 1} of {len(pb.queue)}", 20, TEXT_SECONDARY_COLOR)):
             label = get_font(size).render(text, True, color)
             surface.blit(label, (INFO_X, y), pygame.Rect(0, 0, min(label.get_width(), max_w), label.get_height()))
             y += label.get_height() + 12

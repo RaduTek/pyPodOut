@@ -1,0 +1,18 @@
+# Remote profile for Yamaha WZ34080 remote control
+# Copy to /etc/rc_keymaps/podout.toml
+
+[[protocols]]
+name = "podout"
+protocol = "nec"
+
+[protocols.scancodes]
+0x782f = "KEY_POWER"          # Power (not handled by the app yet)
+0x789f = "KEY_BACK"           # Menu
+0x788e = "KEY_UP"             # Up
+0x788f = "KEY_DOWN"           # Down
+0x78c1 = "KEY_ENTER"          # Select
+0x7804 = "KEY_PREVIOUSSONG"   # Previous
+0x7803 = "KEY_NEXTSONG"       # Next
+0x7802 = "KEY_PLAYPAUSE"      # Play/Pause
+0x781e = "KEY_VOLUMEUP"       # Volume Up
+0x781f = "KEY_VOLUMEDOWN"     # Volume Down
